@@ -2,6 +2,7 @@ mod models;
 mod output;
 mod scanner;
 mod show;
+mod sync;
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;
@@ -35,6 +36,12 @@ enum Commands {
         /// Show only a specific section (project, structure, entry-points, api)
         #[arg(long)]
         section: Option<String>,
+    },
+    /// Update .dex/ context when code changes
+    Sync {
+        /// Path to the project root (defaults to current directory)
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
 }
 
@@ -81,6 +88,20 @@ fn main() -> anyhow::Result<()> {
         Commands::Show { path, section } => {
             let path = path.canonicalize().unwrap_or(path);
             show::show(&path, section.as_deref())?;
+        }
+        Commands::Sync { path } => {
+            let path = path.canonicalize().unwrap_or(path);
+            println!(
+                "{} {} {}",
+                "dex".bold().cyan(),
+                "syncing".dimmed(),
+                path.display()
+            );
+
+            let report = sync::sync(&path)?;
+            sync::print_report(&report);
+
+            println!("\n{} Synced {}", "done".bold().green(), ".dex/".bold());
         }
     }
 

@@ -115,3 +115,69 @@ fn test_init_nonexistent_path() {
         .assert()
         .failure();
 }
+
+#[test]
+fn test_sync_without_init_fails() {
+    let dir = tempfile::tempdir().unwrap();
+    dex_cmd()
+        .args(["sync", dir.path().to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("dex init"));
+}
+
+#[test]
+fn test_sync_after_init_reports_up_to_date() {
+    let fixture = Path::new("tests/fixtures/rust_cli");
+    cleanup(fixture);
+
+    // First, init
+    dex_cmd()
+        .args(["init", fixture.to_str().unwrap()])
+        .assert()
+        .success();
+
+    // Then, sync immediately — nothing should have changed
+    dex_cmd()
+        .args(["sync", fixture.to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("up to date"));
+
+    cleanup(fixture);
+}
+
+#[test]
+fn test_sync_detects_changes() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+
+    // Create a minimal Rust project
+    std::fs::create_dir_all(root.join("src")).unwrap();
+    std::fs::write(root.join("src/main.rs"), "fn main() {}").unwrap();
+    std::fs::write(
+        root.join("Cargo.toml"),
+        r#"[package]
+name = "test-sync"
+version = "0.1.0"
+edition = "2021"
+"#,
+    )
+    .unwrap();
+
+    // Init
+    dex_cmd()
+        .args(["init", root.to_str().unwrap()])
+        .assert()
+        .success();
+
+    // Add a TypeScript file to simulate code changes
+    std::fs::write(root.join("src/index.ts"), "console.log('hello');").unwrap();
+
+    // Sync should detect the new language
+    dex_cmd()
+        .args(["sync", root.to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("languages: added typescript"));
+}
