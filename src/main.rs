@@ -1,6 +1,7 @@
 mod models;
 mod output;
 mod scanner;
+mod show;
 
 use clap::{Parser, Subcommand};
 use colored::Colorize;
@@ -24,6 +25,16 @@ enum Commands {
         /// Path to the project root (defaults to current directory)
         #[arg(default_value = ".")]
         path: PathBuf,
+    },
+    /// Display project context from .dex/ directory
+    Show {
+        /// Path to the project root (defaults to current directory)
+        #[arg(default_value = ".")]
+        path: PathBuf,
+
+        /// Show only a specific section (project, structure, entry-points, api)
+        #[arg(long)]
+        section: Option<String>,
     },
 }
 
@@ -66,6 +77,10 @@ fn main() -> anyhow::Result<()> {
                 ".dex/".bold(),
                 path.display()
             );
+        }
+        Commands::Show { path, section } => {
+            let path = path.canonicalize().unwrap_or(path);
+            show::show(&path, section.as_deref())?;
         }
     }
 
