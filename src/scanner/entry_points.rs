@@ -79,7 +79,8 @@ pub fn detect_public_api(files: &[&Path]) -> Vec<PublicApi> {
             // Match on the file stem or directory name, not arbitrary substrings
             let parts: Vec<&str> = path_str.split('/').collect();
             let matches = parts.iter().any(|part| {
-                let stem = part.strip_suffix(".rs")
+                let stem = part
+                    .strip_suffix(".rs")
                     .or_else(|| part.strip_suffix(".ts"))
                     .or_else(|| part.strip_suffix(".js"))
                     .or_else(|| part.strip_suffix(".py"))

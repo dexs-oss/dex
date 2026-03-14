@@ -7,7 +7,11 @@ use colored::Colorize;
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "dex", version, about = "Codebase context protocol — generate .dex/ for any project")]
+#[command(
+    name = "dex",
+    version,
+    about = "Codebase context protocol — generate .dex/ for any project"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

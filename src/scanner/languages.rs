@@ -41,10 +41,10 @@ pub fn detect_languages(files: &[&Path]) -> Vec<String> {
     let mut counts: HashMap<String, usize> = HashMap::new();
 
     for file in files {
-        if let Some(ext) = file.extension().and_then(|e| e.to_str()) {
-            if let Some(&lang) = ext_map.get(ext) {
-                *counts.entry(lang.to_string()).or_default() += 1;
-            }
+        if let Some(ext) = file.extension().and_then(|e| e.to_str())
+            && let Some(&lang) = ext_map.get(ext)
+        {
+            *counts.entry(lang.to_string()).or_default() += 1;
         }
     }
 

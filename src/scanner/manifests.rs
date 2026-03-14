@@ -72,19 +72,19 @@ pub fn parse_cargo_toml(path: &Path) -> Result<ManifestData> {
     }
 
     // Workspace detection
-    if let Some(workspace) = doc.get("workspace") {
-        if let Some(members) = workspace.get("members").and_then(|m| m.as_array()) {
-            for member in members {
-                if let Some(member_path) = member.as_str() {
-                    data.workspaces.push(WorkspaceMember {
-                        name: member_path
-                            .split('/')
-                            .last()
-                            .unwrap_or(member_path)
-                            .to_string(),
-                        path: member_path.to_string(),
-                    });
-                }
+    if let Some(workspace) = doc.get("workspace")
+        && let Some(members) = workspace.get("members").and_then(|m| m.as_array())
+    {
+        for member in members {
+            if let Some(member_path) = member.as_str() {
+                data.workspaces.push(WorkspaceMember {
+                    name: member_path
+                        .split('/')
+                        .next_back()
+                        .unwrap_or(member_path)
+                        .to_string(),
+                    path: member_path.to_string(),
+                });
             }
         }
     }
@@ -131,7 +131,11 @@ pub fn parse_package_json(path: &Path) -> Result<ManifestData> {
         for ws in workspaces {
             if let Some(ws_path) = ws.as_str() {
                 data.workspaces.push(WorkspaceMember {
-                    name: ws_path.split('/').last().unwrap_or(ws_path).to_string(),
+                    name: ws_path
+                        .split('/')
+                        .next_back()
+                        .unwrap_or(ws_path)
+                        .to_string(),
                     path: ws_path.to_string(),
                 });
             }
@@ -172,7 +176,7 @@ pub fn parse_go_mod(path: &Path) -> Result<ManifestData> {
     ];
     for fw in &frameworks_to_detect {
         if content.contains(fw) {
-            let short = fw.split('/').last().unwrap_or(fw);
+            let short = fw.split('/').next_back().unwrap_or(fw);
             data.frameworks.push(short.to_string());
         }
     }
@@ -197,17 +201,13 @@ pub fn parse_pyproject_toml(path: &Path) -> Result<ManifestData> {
         if let Some(deps) = project.get("dependencies").and_then(|d| d.as_array()) {
             detect_python_frameworks(deps, &mut data.frameworks);
         }
-    } else if let Some(poetry) = doc.get("tool").and_then(|t| t.get("poetry")) {
-        if let Some(name) = poetry.get("name").and_then(|n| n.as_str()) {
-            data.name = Some(name.to_string());
-        }
+    } else if let Some(poetry) = doc.get("tool").and_then(|t| t.get("poetry"))
+        && let Some(name) = poetry.get("name").and_then(|n| n.as_str())
+    {
+        data.name = Some(name.to_string());
     }
 
-    if doc
-        .get("project")
-        .and_then(|p| p.get("scripts"))
-        .is_some()
-    {
+    if doc.get("project").and_then(|p| p.get("scripts")).is_some() {
         data.has_bin = true;
     }
 
@@ -298,10 +298,7 @@ require (
 "#,
         );
         let data = parse_go_mod(&path).unwrap();
-        assert_eq!(
-            data.name,
-            Some("github.com/myorg/myservice".into())
-        );
+        assert_eq!(data.name, Some("github.com/myorg/myservice".into()));
         assert!(data.frameworks.contains(&"gin".to_string()));
     }
 
