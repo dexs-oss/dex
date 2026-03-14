@@ -35,8 +35,33 @@ fn main() -> anyhow::Result<()> {
                 "scanning".dimmed(),
                 path.display()
             );
-            // TODO: scanner + output
-            println!("{}", "Done!".bold().green());
+
+            let result = scanner::scan(&path)?;
+
+            println!(
+                "  {} {}",
+                "languages:".dimmed(),
+                result.context.project.languages.join(", ")
+            );
+            println!(
+                "  {} {}",
+                "type:".dimmed(),
+                result.context.project.project_type
+            );
+            println!(
+                "  {} {}",
+                "entry points:".dimmed(),
+                result.paths.entry_points.len()
+            );
+
+            output::write_dex_dir(&path, &result)?;
+
+            println!(
+                "\n{} Generated {} in {}/",
+                "done".bold().green(),
+                ".dex/".bold(),
+                path.display()
+            );
         }
     }
 
