@@ -1,5 +1,7 @@
 # dex
 
+[![CI](https://github.com/dexs-oss/dex/actions/workflows/ci.yml/badge.svg)](https://github.com/dexs-oss/dex/actions/workflows/ci.yml)
+
 **Codebase context protocol — generate `.dex/` for any project.**
 
 `dex` scans your codebase and generates a `.dex/` directory containing a structured, machine-readable map of your project. Both humans and AI agents can use it to quickly understand architecture, conventions, and critical paths.
