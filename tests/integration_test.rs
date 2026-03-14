@@ -128,23 +128,30 @@ fn test_sync_without_init_fails() {
 
 #[test]
 fn test_sync_after_init_reports_up_to_date() {
-    let fixture = Path::new("tests/fixtures/rust_cli");
-    cleanup(fixture);
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+
+    // Create a minimal Rust project
+    std::fs::create_dir_all(root.join("src")).unwrap();
+    std::fs::write(root.join("src/main.rs"), "fn main() {}").unwrap();
+    std::fs::write(
+        root.join("Cargo.toml"),
+        "[package]\nname = \"test-sync-uptodate\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    )
+    .unwrap();
 
     // First, init
     dex_cmd()
-        .args(["init", fixture.to_str().unwrap()])
+        .args(["init", root.to_str().unwrap()])
         .assert()
         .success();
 
     // Then, sync immediately — nothing should have changed
     dex_cmd()
-        .args(["sync", fixture.to_str().unwrap()])
+        .args(["sync", root.to_str().unwrap()])
         .assert()
         .success()
         .stdout(predicate::str::contains("up to date"));
-
-    cleanup(fixture);
 }
 
 #[test]
